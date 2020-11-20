@@ -3,6 +3,10 @@ import ScoreLabel from '../ui/ScoreLabel';
 
 let DUDE_KEY = 'dude';
 let STAR_KEY = 'star';
+let BLUE_KEY = 'blue';
+let YELLOW_KEY = 'yellow';
+let PLATFORM = 'platform';
+let PURPLE_PLAT = 'purpleplat';
 
 export default class GameScene extends Phaser.Scene {
   constructor() {
@@ -12,11 +16,12 @@ export default class GameScene extends Phaser.Scene {
   }
 
   preload() {
-    this.load.image('sky', 'assets/sky.png');
-    this.load.image('ground', 'assets/platform.png');
+    // this.load.image('ground', 'assets/platform.png');
     this.load.image(STAR_KEY, 'assets/star.png');
-    this.load.image('bomb', 'assets/bomb.png');
-    this.load.image('vu', 'assets/strip1.png');
+    this.load.image(BLUE_KEY, '/assets/aqua_ball.png');
+    this.load.image(YELLOW_KEY, '/assets/yellow_ball.png');
+    this.load.image(PLATFORM, 'assets/strip1.png');
+    this.load.image(PURPLE_PLAT, 'assets/purpleplatform.png');
 
     this.load.spritesheet(DUDE_KEY, 'assets/dude.png', {
       frameWidth: 32,
@@ -25,16 +30,33 @@ export default class GameScene extends Phaser.Scene {
   }
 
   create() {
-    this.add.image(400, 300, 'sky');
+    // this.add.image(400, 300, this.sky);
+    this.cameras.main.backgroundColor = Phaser.Display.Color.HexStringToColor(
+      //   '#ffffff'
+      '#7851CC'
+    );
 
     const platforms = this.createPlatforms();
     this.player = this.createPlayer();
     const stars = this.createStars();
+    const blue = this.physics.add.image(550, 400, BLUE_KEY);
+    const yellow = this.physics.add.staticGroup().create(10, 310, YELLOW_KEY);
+    // const yellow = this.physics.add.image(590, 400, YELLOW_KEY);
 
     this.physics.add.collider(this.player, platforms);
     this.physics.add.collider(stars, platforms);
+    this.physics.add.collider(blue, platforms);
+    this.physics.add.collider(yellow, platforms);
 
     this.physics.add.overlap(this.player, stars, this.collectStar, null, this);
+    this.physics.add.overlap(this.player, blue, this.collectBlue, null, this);
+    this.physics.add.overlap(
+      this.player,
+      yellow,
+      this.collectYellow,
+      null,
+      this
+    );
 
     this.cursors = this.input.keyboard.createCursorKeys();
 
@@ -54,15 +76,19 @@ export default class GameScene extends Phaser.Scene {
     }
 
     if (this.cursors.up.isDown && this.player.body.touching.down) {
-      this.player.setVelocityY(-330);
+      this.player.setVelocityY(-320);
     }
   }
 
   createPlatforms() {
     let platforms = this.physics.add.staticGroup();
-    platforms.create(400, 568, 'vu').setScale(2).refreshBody();
-    platforms.create(600, 400, 'vu');
-    platforms.create(50, 250, 'vu');
+    platforms.create(400, 568, PLATFORM).setScale(2).refreshBody();
+    platforms.create(600, 400, PLATFORM);
+    platforms.create(50, 250, PLATFORM);
+    // platforms.create(0, 380, PURPLE_PLAT);
+
+    // this.physics.add.image(0, 300, PURPLE_PLAT);
+
     return platforms;
   }
 
@@ -116,6 +142,22 @@ export default class GameScene extends Phaser.Scene {
   collectStar(player, star) {
     star.disableBody(true, true);
     this.scoreLabel.add(10);
+  }
+
+  collectBlue(player, blue) {
+    blue.disableBody(true, true);
+    this.cameras.main.backgroundColor = Phaser.Display.Color.HexStringToColor(
+      '#39B2C8'
+    );
+    let purpleplat = this.physics.add.staticGroup().create(0, 380, PURPLE_PLAT);
+    this.physics.add.collider(this.player, purpleplat);
+  }
+
+  collectYellow(player, yellow) {
+    yellow.disableBody(true, true);
+    this.cameras.main.backgroundColor = Phaser.Display.Color.HexStringToColor(
+      '#F4C11D'
+    );
   }
 
   createScoreLabel(x, y, score) {
